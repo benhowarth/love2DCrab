@@ -23,7 +23,7 @@ function love.load()
 	world:setCallbacks(beginContact, endContact, preSolve, postSolve)
   text=""
 	persisting = 0
-	hitboxes=true
+	hitboxes=false
 
 
 	Crab=Class{
@@ -77,8 +77,8 @@ function love.load()
 		  self.eyes.l.stalk1.f=love.physics.newFixture(self.eyes.l.stalk1.b, self.eyes.l.stalk1.s)
 		  self.eyes.l.stalk1.f:setUserData("crab.eyes.l.stalk1")
 			--left eye base stalk joint setup
-		  self.eyes.l.stalk1.joint=love.physics.newRevoluteJoint(self.body.b,self.eyes.l.stalk1.b,x+25,y-25,false)
-		  self.eyes.l.stalk1.joint:setLimits(-0.2,0.2)
+		  self.eyes.l.stalk1.joint=love.physics.newRevoluteJoint(self.body.b,self.eyes.l.stalk1.b,x+25,y-20,false)
+		  self.eyes.l.stalk1.joint:setLimits(-0.3,0.3)
 		  self.eyes.l.stalk1.joint:setLimitsEnabled(true)
 			--left eye top stalk setup
 			self.eyes.l.stalk2={}
@@ -94,12 +94,13 @@ function love.load()
 			--left eye ball setup
 			self.eyes.l.ball={}
 			self.eyes.l.ball.b=love.physics.newBody(world,x+25,y-65,"dynamic")
-			self.eyes.l.ball.b:setMass(4)
+			self.eyes.l.ball.b:setMass(2)
 			self.eyes.l.ball.s=love.physics.newRectangleShape(20, 20)
 			self.eyes.l.ball.f=love.physics.newFixture(self.eyes.l.ball.b, self.eyes.l.ball.s)
 			self.eyes.l.ball.f:setUserData("crab.eyes.l.ball")
 			--left eye ball joint setup
 			self.eyes.l.ball.joint=love.physics.newRevoluteJoint(self.eyes.l.stalk2.b,self.eyes.l.ball.b,x+25,y-65,false)
+			self.eyes.l.ball.joint:setLimits(-0.1,0.1)
 
 
 
@@ -113,8 +114,8 @@ function love.load()
 		  self.eyes.r.stalk1.f=love.physics.newFixture(self.eyes.r.stalk1.b, self.eyes.r.stalk1.s)
 		  self.eyes.r.stalk1.f:setUserData("crab.eyes.r.stalk1")
 			--right eye base stalk joint setup
-		  self.eyes.r.stalk1.joint=love.physics.newRevoluteJoint(self.body.b,self.eyes.r.stalk1.b,x-25,y-25,false)
-		  self.eyes.r.stalk1.joint:setLimits(-0.2,0.2)
+		  self.eyes.r.stalk1.joint=love.physics.newRevoluteJoint(self.body.b,self.eyes.r.stalk1.b,x-25,y-20,false)
+		  self.eyes.r.stalk1.joint:setLimits(-0.3,0.3)
 		  self.eyes.r.stalk1.joint:setLimitsEnabled(true)
 			--right eye top stalk setup
 			self.eyes.r.stalk2={}
@@ -130,25 +131,58 @@ function love.load()
 			--left eye ball setup
 			self.eyes.r.ball={}
 			self.eyes.r.ball.b=love.physics.newBody(world,x-25,y-65,"dynamic")
-			self.eyes.r.ball.b:setMass(4)
+			self.eyes.r.ball.b:setMass(2)
 			self.eyes.r.ball.s=love.physics.newRectangleShape(20, 20)
 			self.eyes.r.ball.f=love.physics.newFixture(self.eyes.r.ball.b, self.eyes.r.ball.s)
 			self.eyes.r.ball.f:setUserData("crab.eyes.r.ball")
 			--left eye ball joint setup
 			self.eyes.r.ball.joint=love.physics.newRevoluteJoint(self.eyes.r.stalk2.b,self.eyes.r.ball.b,x-25,y-65,false)
+			self.eyes.r.ball.joint:setLimits(-0.1,0.1)
+
+
+			self.color={}
+			self.color.primary={}
+			self.color.primary[1]=255
+			self.color.primary[2]=127
+			self.color.primary[3]=39
+			self.grounded=false;
 
 		end;
-		grounded=false;
 		draw=function(self)
+				--love.graphics.setColor(self.color.primary[1], self.color.primary[2], self.color.primary[3], 255)
+				love.graphics.setColor(255,255,255,255)
 			  love.graphics.draw(imgs.crabLArm,self.arms.l.b:getX(),self.arms.l.b:getY(),self.arms.l.b:getAngle(),1,1,imgs.crabLArm:getWidth()/2,imgs.crabLArm:getHeight()/2)
 			  love.graphics.draw(imgs.crabRArm,self.arms.r.b:getX(),self.arms.r.b:getY(),self.arms.r.b:getAngle(),1,1,imgs.crabRArm:getWidth()/2,imgs.crabRArm:getHeight()/2)
-			  love.graphics.draw(imgs.crabBod,self.body.b:getX(),self.body.b:getY(),self.body.b:getAngle(),1,1,imgs.crabBod:getWidth()/2,imgs.crabBod:getHeight()/2)
+
+
+				love.graphics.setColor(self.color.primary[1], self.color.primary[2], self.color.primary[3], 255)
+				love.graphics.setLineWidth(5)
+				eyeStalkLPoints={}
+				eyeStalkLPoints[1],eyeStalkLPoints[2]=self.eyes.l.stalk1.joint:getAnchors()
+				eyeStalkLPoints[3],eyeStalkLPoints[4]=self.eyes.l.stalk2.joint:getAnchors()
+				eyeStalkLPoints[5],eyeStalkLPoints[6]=self.eyes.l.ball.joint:getAnchors()
+				eyeStalkL=love.math.newBezierCurve(eyeStalkLPoints)
+				love.graphics.line(eyeStalkL:render())
+
+				eyeStalkRPoints={}
+				eyeStalkRPoints[1],eyeStalkRPoints[2]=self.eyes.r.stalk1.joint:getAnchors()
+				eyeStalkRPoints[3],eyeStalkRPoints[4]=self.eyes.r.stalk2.joint:getAnchors()
+				eyeStalkRPoints[5],eyeStalkRPoints[6]=self.eyes.r.ball.joint:getAnchors()
+				eyeStalkR=love.math.newBezierCurve(eyeStalkRPoints)
+				love.graphics.line(eyeStalkR:render())
+
+				love.graphics.setColor(255,255,255,255)
+				love.graphics.draw(imgs.crabBod,self.body.b:getX(),self.body.b:getY(),self.body.b:getAngle(),1,1,imgs.crabBod:getWidth()/2,imgs.crabBod:getHeight()/2)
 
 			  love.graphics.draw(imgs.crabEye,self.eyes.l.ball.b:getX(),self.eyes.l.ball.b:getY(),self.eyes.l.ball.b:getAngle(),1,1,imgs.crabEye:getWidth()/2,imgs.crabEye:getHeight()/2)
 
 
 			  love.graphics.draw(imgs.crabEye,self.eyes.r.ball.b:getX(),self.eyes.r.ball.b:getY(),self.eyes.r.ball.b:getAngle(),1,1,imgs.crabEye:getWidth()/2,imgs.crabEye:getHeight()/2)
 				if(hitboxes)then
+
+					love.graphics.setLineWidth(1)
+					love.graphics.setColor(255,255,255,255)
+
 					--draw bod
 					love.graphics.polygon("line",self.body.b:getWorldPoints(self.body.s:getPoints()))
 					--draw arms
@@ -202,7 +236,17 @@ function love.update(dt)
 				crab.body.b:applyForce(0,3000)
 			end
 		end
+end
 
+function love.keyreleased(key)
+	--debug
+	if key=="q" then
+		if(hitboxes)then
+			hitboxes=false
+		else
+			hitboxes=true
+		end
+	end
 end
 
 function love.draw()
