@@ -15,15 +15,17 @@ function love.load()
 
   imgs={}
   imgs.crabBod=love.graphics.newImage("img/crabBod.png")
-  imgs.crabRArm=love.graphics.newImage("img/crabArm.png")
-  imgs.crabLArm=love.graphics.newImage("img/crabArm2.png")
+  imgs.crabRClaw=love.graphics.newImage("img/crabClaw.png")
+  imgs.crabRClawC=love.graphics.newImage("img/crabClawC.png")
+  imgs.crabLClaw=love.graphics.newImage("img/crabClaw2.png")
+  imgs.crabLClawC=love.graphics.newImage("img/crabClaw2C.png")
   imgs.crabEye=love.graphics.newImage("img/crabEye.png")
 	love.physics.setMeter(64)
 	world=love.physics.newWorld(0,9.8*64,true)
 	world:setCallbacks(beginContact, endContact, preSolve, postSolve)
   text=""
 	persisting = 0
-	hitboxes=false
+	hitboxes=true
 
 
 	Crab=Class{
@@ -36,72 +38,74 @@ function love.load()
 		  self.body.f=love.physics.newFixture(self.body.b,self.body.s)
 		  self.body.f:setRestitution(0.9)
 		  self.body.f:setUserData("crab")
+		  self.body.f:setFilterData(1,1,-1)
 
-			--left arm setup
-		  self.arms={}
-		  self.arms.l={}
-		  self.arms.l.b=love.physics.newBody(world,x+80,y-20,"dynamic")
-		  self.arms.l.b:setMass(6)
-		  self.arms.l.s=love.physics.newRectangleShape(90, 25)
-		  self.arms.l.f=love.physics.newFixture(self.arms.l.b, self.arms.l.s)
-		  self.arms.l.f:setRestitution(0.4)
-		  self.arms.l.f:setUserData("crab.arms.l")
 
-			--left arm joint setup
-		  self.arms.l.joint=love.physics.newRevoluteJoint(self.body.b,self.arms.l.b,x+65,y-20,false)
-		  self.arms.l.joint:setLimits(-math.pi/3.3,-math.pi/4.6)
-		  self.arms.l.joint:setLimitsEnabled(true)
+			--CLAWS SETUP
+			self.claws={}
+			self.claws.l={}
+			self.claws.l.b=love.physics.newBody(world,x+150,y-20,"dynamic")
+ 		  self.claws.l.b:setMass(8)
+ 		  self.claws.l.s=love.physics.newRectangleShape(80, 40)
+ 		  self.claws.l.f=love.physics.newFixture(self.claws.l.b, self.claws.l.s)
+ 		  self.claws.l.f:setRestitution(0.4)
+ 		  self.claws.l.f:setUserData("crab.claws.l")
+ 		  self.claws.l.f:setFilterData(1,1,-1)
 
-			--right arm setup
-		  self.arms.r={}
-		  self.arms.r.b=love.physics.newBody(world,x-80,y-20,"dynamic")
-		  self.arms.r.b:setMass(6)
-		  self.arms.r.s=love.physics.newRectangleShape(90, 25)
-		  self.arms.r.f=love.physics.newFixture(self.arms.r.b, self.arms.r.s)
-		  self.arms.r.f:setRestitution(0.4)
-		  self.arms.r.f:setUserData("crab.arms.r")
+			self.claws.l.rope=love.physics.newRopeJoint(self.body.b, self.claws.l.b, x+50, y-20, x+120, y-20, 40, true)
+			self.claws.l.mouse=love.physics.newMouseJoint(self.claws.l.b, x+150,y-20)
+			self.claws.l.mouse:setMaxForce(1200)
+			self.claws.l.mouse:setDampingRatio(5)
 
-			--right arm joint setup
-		  self.arms.r.joint=love.physics.newRevoluteJoint(self.body.b,self.arms.r.b,x-65,y-20,false)
-		  self.arms.r.joint:setLimits(math.pi/4.6,math.pi/3.3)
-		  self.arms.r.joint:setLimitsEnabled(true)
+			self.claws.r={}
+			self.claws.r.b=love.physics.newBody(world,x-150,y-20,"dynamic")
+ 		  self.claws.r.b:setMass(8)
+ 		  self.claws.r.s=love.physics.newRectangleShape(80, 40)
+ 		  self.claws.r.f=love.physics.newFixture(self.claws.r.b, self.claws.r.s)
+ 		  self.claws.r.f:setRestitution(0.4)
+ 		  self.claws.r.f:setUserData("crab.claws.r")
+ 		  self.claws.r.f:setFilterData(1,1,-1)
 
+			self.claws.r.rope=love.physics.newRopeJoint(self.body.b, self.claws.r.b, x-50, y-20, x-120, y-20, 40, true)
+
+			--EYE SETUP
 			--left eye setup
 			self.eyes={}
 			self.eyes.l={}
 			--left eye base stalk setup
 			self.eyes.l.stalk1={}
 			self.eyes.l.stalk1.b=love.physics.newBody(world,x+25,y-30,"dynamic")
-		  self.eyes.l.stalk1.b:setMass(2)
+		  self.eyes.l.stalk1.b:setMass(4)
 		  self.eyes.l.stalk1.s=love.physics.newRectangleShape(10, 30)
 		  self.eyes.l.stalk1.f=love.physics.newFixture(self.eyes.l.stalk1.b, self.eyes.l.stalk1.s)
 		  self.eyes.l.stalk1.f:setUserData("crab.eyes.l.stalk1")
+		  self.eyes.l.stalk1.f:setFilterData(1,1,-1)
 			--left eye base stalk joint setup
 		  self.eyes.l.stalk1.joint=love.physics.newRevoluteJoint(self.body.b,self.eyes.l.stalk1.b,x+25,y-20,false)
-		  self.eyes.l.stalk1.joint:setLimits(-0.3,0.3)
+		  self.eyes.l.stalk1.joint:setLimits(-0.1,0.1)
 		  self.eyes.l.stalk1.joint:setLimitsEnabled(true)
 			--left eye top stalk setup
 			self.eyes.l.stalk2={}
 			self.eyes.l.stalk2.b=love.physics.newBody(world,x+25,y-50,"dynamic")
-			self.eyes.l.stalk2.b:setMass(2)
+			self.eyes.l.stalk2.b:setMass(4)
 			self.eyes.l.stalk2.s=love.physics.newRectangleShape(10, 25)
 			self.eyes.l.stalk2.f=love.physics.newFixture(self.eyes.l.stalk2.b, self.eyes.l.stalk2.s)
 			self.eyes.l.stalk2.f:setUserData("crab.eyes.l.stalk2")
+			self.eyes.l.stalk2.f:setFilterData(1,1,-1)
 			--left eye top stalk joint setup
 			self.eyes.l.stalk2.joint=love.physics.newRevoluteJoint(self.eyes.l.stalk1.b,self.eyes.l.stalk2.b,x+25,y-45,false)
-			self.eyes.l.stalk2.joint:setLimits(-0.3,0.3)
+			self.eyes.l.stalk2.joint:setLimits(-0.4,0.4)
 			self.eyes.l.stalk2.joint:setLimitsEnabled(true)
 			--left eye ball setup
 			self.eyes.l.ball={}
 			self.eyes.l.ball.b=love.physics.newBody(world,x+25,y-65,"dynamic")
-			self.eyes.l.ball.b:setMass(2)
+			self.eyes.l.ball.b:setMass(3)
 			self.eyes.l.ball.s=love.physics.newRectangleShape(20, 20)
 			self.eyes.l.ball.f=love.physics.newFixture(self.eyes.l.ball.b, self.eyes.l.ball.s)
 			self.eyes.l.ball.f:setUserData("crab.eyes.l.ball")
+			self.eyes.l.ball.f:setFilterData(1,1,-1)
 			--left eye ball joint setup
-			self.eyes.l.ball.joint=love.physics.newRevoluteJoint(self.eyes.l.stalk2.b,self.eyes.l.ball.b,x+25,y-65,false)
-			self.eyes.l.ball.joint:setLimits(-0.1,0.1)
-
+			self.eyes.l.ball.joint=love.physics.newWeldJoint(self.eyes.l.stalk2.b,self.eyes.l.ball.b,x+25,y-65,false)
 
 
 			--right eye setup
@@ -109,35 +113,37 @@ function love.load()
 			--right eye base stalk setup
 			self.eyes.r.stalk1={}
 			self.eyes.r.stalk1.b=love.physics.newBody(world,x-25,y-30,"dynamic")
-		  self.eyes.r.stalk1.b:setMass(2)
+		  self.eyes.r.stalk1.b:setMass(4)
 		  self.eyes.r.stalk1.s=love.physics.newRectangleShape(10, 30)
 		  self.eyes.r.stalk1.f=love.physics.newFixture(self.eyes.r.stalk1.b, self.eyes.r.stalk1.s)
 		  self.eyes.r.stalk1.f:setUserData("crab.eyes.r.stalk1")
+		  self.eyes.r.stalk1.f:setFilterData(1,1,-1)
 			--right eye base stalk joint setup
 		  self.eyes.r.stalk1.joint=love.physics.newRevoluteJoint(self.body.b,self.eyes.r.stalk1.b,x-25,y-20,false)
-		  self.eyes.r.stalk1.joint:setLimits(-0.3,0.3)
+		  self.eyes.r.stalk1.joint:setLimits(-0.1,0.1)
 		  self.eyes.r.stalk1.joint:setLimitsEnabled(true)
 			--right eye top stalk setup
 			self.eyes.r.stalk2={}
 			self.eyes.r.stalk2.b=love.physics.newBody(world,x-25,y-50,"dynamic")
-			self.eyes.r.stalk2.b:setMass(2)
+			self.eyes.r.stalk2.b:setMass(4)
 			self.eyes.r.stalk2.s=love.physics.newRectangleShape(10, 25)
 			self.eyes.r.stalk2.f=love.physics.newFixture(self.eyes.r.stalk2.b, self.eyes.r.stalk2.s)
 			self.eyes.r.stalk2.f:setUserData("crab.eyes.r.stalk2")
+			self.eyes.r.stalk2.f:setFilterData(1,1,-1)
 			--left eye top stalk joint setup
 			self.eyes.r.stalk2.joint=love.physics.newRevoluteJoint(self.eyes.r.stalk1.b,self.eyes.r.stalk2.b,x-25,y-45,false)
-			self.eyes.r.stalk2.joint:setLimits(-0.3,0.3)
+			self.eyes.r.stalk2.joint:setLimits(-0.4,0.4)
 			self.eyes.r.stalk2.joint:setLimitsEnabled(true)
 			--left eye ball setup
 			self.eyes.r.ball={}
 			self.eyes.r.ball.b=love.physics.newBody(world,x-25,y-65,"dynamic")
-			self.eyes.r.ball.b:setMass(2)
+			self.eyes.r.ball.b:setMass(3)
 			self.eyes.r.ball.s=love.physics.newRectangleShape(20, 20)
 			self.eyes.r.ball.f=love.physics.newFixture(self.eyes.r.ball.b, self.eyes.r.ball.s)
 			self.eyes.r.ball.f:setUserData("crab.eyes.r.ball")
+			self.eyes.r.ball.f:setFilterData(1,1,-1)
 			--left eye ball joint setup
-			self.eyes.r.ball.joint=love.physics.newRevoluteJoint(self.eyes.r.stalk2.b,self.eyes.r.ball.b,x-25,y-65,false)
-			self.eyes.r.ball.joint:setLimits(-0.1,0.1)
+			self.eyes.r.ball.joint=love.physics.newWeldJoint(self.eyes.r.stalk2.b,self.eyes.r.ball.b,x-25,y-65,false)
 
 
 			self.color={}
@@ -146,14 +152,13 @@ function love.load()
 			self.color.primary[2]=127
 			self.color.primary[3]=39
 			self.grounded=false;
+			self.grab=false;
+			self.grabjoint=nil;
 
 		end;
 		draw=function(self)
 				--love.graphics.setColor(self.color.primary[1], self.color.primary[2], self.color.primary[3], 255)
 				love.graphics.setColor(255,255,255,255)
-			  love.graphics.draw(imgs.crabLArm,self.arms.l.b:getX(),self.arms.l.b:getY(),self.arms.l.b:getAngle(),1,1,imgs.crabLArm:getWidth()/2,imgs.crabLArm:getHeight()/2)
-			  love.graphics.draw(imgs.crabRArm,self.arms.r.b:getX(),self.arms.r.b:getY(),self.arms.r.b:getAngle(),1,1,imgs.crabRArm:getWidth()/2,imgs.crabRArm:getHeight()/2)
-
 
 				love.graphics.setColor(self.color.primary[1], self.color.primary[2], self.color.primary[3], 255)
 				love.graphics.setLineWidth(5)
@@ -178,6 +183,13 @@ function love.load()
 
 
 			  love.graphics.draw(imgs.crabEye,self.eyes.r.ball.b:getX(),self.eyes.r.ball.b:getY(),self.eyes.r.ball.b:getAngle(),1,1,imgs.crabEye:getWidth()/2,imgs.crabEye:getHeight()/2)
+				if(crab.grab) then
+					love.graphics.draw(imgs.crabLClawC,self.claws.l.b:getX(),self.claws.l.b:getY(),self.claws.l.b:getAngle(),1,1,imgs.crabLClawC:getWidth()/2,imgs.crabLClawC:getHeight()/2)
+				else
+					love.graphics.draw(imgs.crabLClaw,self.claws.l.b:getX(),self.claws.l.b:getY(),self.claws.l.b:getAngle(),1,1,imgs.crabLClaw:getWidth()/2,imgs.crabLClaw:getHeight()/2)
+				end
+				love.graphics.draw(imgs.crabRClaw,self.claws.r.b:getX(),self.claws.r.b:getY(),self.claws.r.b:getAngle(),1,1,imgs.crabRClaw:getWidth()/2,imgs.crabRClaw:getHeight()/2)
+
 				if(hitboxes)then
 
 					love.graphics.setLineWidth(1)
@@ -186,8 +198,8 @@ function love.load()
 					--draw bod
 					love.graphics.polygon("line",self.body.b:getWorldPoints(self.body.s:getPoints()))
 					--draw arms
-					love.graphics.polygon("line",self.arms.l.b:getWorldPoints(self.arms.l.s:getPoints()))
-					love.graphics.polygon("line",self.arms.r.b:getWorldPoints(self.arms.r.s:getPoints()))
+					--love.graphics.polygon("line",self.arms.l.b:getWorldPoints(self.arms.l.s:getPoints()))
+					--love.graphics.polygon("line",self.arms.r.b:getWorldPoints(self.arms.r.s:getPoints()))
 					--draw eyes
 					love.graphics.polygon("line",self.eyes.l.stalk1.b:getWorldPoints(self.eyes.l.stalk1.s:getPoints()))
 					love.graphics.polygon("line",self.eyes.l.stalk2.b:getWorldPoints(self.eyes.l.stalk2.s:getPoints()))
@@ -197,7 +209,29 @@ function love.load()
 					love.graphics.polygon("line",self.eyes.r.stalk1.b:getWorldPoints(self.eyes.r.stalk1.s:getPoints()))
 					love.graphics.polygon("line",self.eyes.r.stalk2.b:getWorldPoints(self.eyes.r.stalk2.s:getPoints()))
 					love.graphics.polygon("line",self.eyes.r.ball.b:getWorldPoints(self.eyes.r.ball.s:getPoints()))
+
+					--draw claws
+
+					love.graphics.polygon("line",self.claws.l.b:getWorldPoints(self.claws.l.s:getPoints()))
+					love.graphics.polygon("line",self.claws.r.b:getWorldPoints(self.claws.r.s:getPoints()))
 				end
+		end;
+		update=function(self,dt)
+			self.body.b:setAngle(0)
+			self.claws.r.b:setAngle(0)
+			mouseX=love.mouse.getX()
+			mouseY=love.mouse.getY()
+			--maxX=self.claws.l.b:getX()+80/4
+			--minX=self.claws.l.b:getX()-80/4
+			--mouseY=love.mouse.getY()
+			--maxY=self.claws.l.b:getY()+40/4
+			--minY=self.claws.l.b:getY()-40/4
+			--if(mouseX>maxX)then mouseX=maxX
+			--elseif(mouseX<minX)then mouseX=minX end;
+			--if(mouseY>maxY)then mouseY=maxY
+			--elseif(mouseY<minY)then mouseY=minY end;
+
+			self.claws.l.mouse:setTarget(mouseX,mouseY)
 		end;
 	}
 
@@ -212,11 +246,12 @@ function love.load()
   ground.f=love.physics.newFixture(ground.b,ground.s)
   ground.f:setRestitution(0.4)
   ground.f:setUserData("ground")
+  ground.f:setFilterData(1,1,1)
 end
 
 function love.update(dt)
+	crab:update(dt)
   world:update(dt)
-  crab.body.b:setAngle(0)
   x,y=crab.body.b:getLinearVelocity()
 		if love.keyboard.isDown("d") then
 			if x<600 then
@@ -237,7 +272,10 @@ function love.update(dt)
 			end
 		end
 end
-
+function love.mousepressed(x, y, button, isTouch)
+	if(crab.grab)then crab.grab=false
+	else crab.grab=true end
+end
 function love.keyreleased(key)
 	--debug
 	if key=="q" then
