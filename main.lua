@@ -1,4 +1,9 @@
 function love.load()
+
+	Inspect = require "lib.inspect"
+	Class = require "lib.hump.class"
+	Gamestate = require "lib.hump.gamestate"
+
 	window={}
 	window.w=800
 	window.h=650
@@ -9,50 +14,69 @@ function love.load()
   love.window.setMode( window.w, window.h)
 
   imgs={}
-  imgs.crabBod=love.graphics.newImage("crabBod.png")
-  imgs.crabRArm=love.graphics.newImage("crabArm.png")
-  imgs.crabLArm=love.graphics.newImage("crabArm2.png")
+  imgs.crabBod=love.graphics.newImage("img/crabBod.png")
+  imgs.crabRArm=love.graphics.newImage("img/crabArm.png")
+  imgs.crabLArm=love.graphics.newImage("img/crabArm2.png")
 	love.physics.setMeter(64)
 	world=love.physics.newWorld(0,9.8*64,true)
 	world:setCallbacks(beginContact, endContact, preSolve, postSolve)
   text=""
 	persisting = 0
+	hitboxes=true
 
-  crab={}
-  crab.grounded=false;
 
-  crab.body={}
-  crab.body.b=love.physics.newBody(world,400,200,"dynamic")
-  crab.body.b:setMass(12)
-  crab.body.s=love.physics.newRectangleShape(100, 50)
-  crab.body.f=love.physics.newFixture(crab.body.b,crab.body.s)
-  crab.body.f:setRestitution(0.9)
-  crab.body.f:setUserData("crab")
+	Crab=Class{
+		init=function(self,x,y)
+			self.body={}
+		  self.body.b=love.physics.newBody(world,x,y,"dynamic")
+		  self.body.b:setMass(12)
+		  self.body.s=love.physics.newRectangleShape(100, 50)
+		  self.body.f=love.physics.newFixture(self.body.b,self.body.s)
+		  self.body.f:setRestitution(0.9)
+		  self.body.f:setUserData("crab")
 
-  crab.arms={}
-  crab.arms.l={}
-  crab.arms.l.b=love.physics.newBody(world,470,180,"dynamic")
-  crab.arms.l.b:setMass(6)
-  crab.arms.l.s=love.physics.newRectangleShape(90, 25)
-  crab.arms.l.f=love.physics.newFixture(crab.arms.l.b, crab.arms.l.s)
-  crab.arms.l.f:setRestitution(0.4)
-  crab.arms.l.f:setUserData("crab.arms.l")
+		  self.arms={}
+		  self.arms.l={}
+		  self.arms.l.b=love.physics.newBody(world,x+70,y-20,"dynamic")
+		  self.arms.l.b:setMass(6)
+		  self.arms.l.s=love.physics.newRectangleShape(90, 25)
+		  self.arms.l.f=love.physics.newFixture(self.arms.l.b, self.arms.l.s)
+		  self.arms.l.f:setRestitution(0.4)
+		  self.arms.l.f:setUserData("crab.arms.l")
 
-  crab.arms.l.joint=love.physics.newRevoluteJoint(crab.body.b,crab.arms.l.b,450,180,false)
-  crab.arms.l.joint:setLimits(-math.pi/3.3,-math.pi/4.6)
-  crab.arms.l.joint:setLimitsEnabled(true)
+		  self.arms.l.joint=love.physics.newRevoluteJoint(self.body.b,self.arms.l.b,x+50,y-20,false)
+		  self.arms.l.joint:setLimits(-math.pi/3.3,-math.pi/4.6)
+		  self.arms.l.joint:setLimitsEnabled(true)
 
-  crab.arms.r={}
-  crab.arms.r.b=love.physics.newBody(world,330,180,"dynamic")
-  crab.arms.r.b:setMass(6)
-  crab.arms.r.s=love.physics.newRectangleShape(90, 25)
-  crab.arms.r.f=love.physics.newFixture(crab.arms.r.b, crab.arms.r.s)
-  crab.arms.r.f:setRestitution(0.4)
-  crab.arms.r.f:setUserData("crab.arms.r")
+		  self.arms.r={}
+		  self.arms.r.b=love.physics.newBody(world,x-70,y-20,"dynamic")
+		  self.arms.r.b:setMass(6)
+		  self.arms.r.s=love.physics.newRectangleShape(90, 25)
+		  self.arms.r.f=love.physics.newFixture(self.arms.r.b, self.arms.r.s)
+		  self.arms.r.f:setRestitution(0.4)
+		  self.arms.r.f:setUserData("crab.arms.r")
 
-  crab.arms.r.joint=love.physics.newRevoluteJoint(crab.body.b,crab.arms.r.b,350,180,false)
-  crab.arms.r.joint:setLimits(math.pi/4.6,math.pi/3.3)
-  crab.arms.r.joint:setLimitsEnabled(true)
+		  self.arms.r.joint=love.physics.newRevoluteJoint(self.body.b,self.arms.r.b,x-50,y-20,false)
+		  self.arms.r.joint:setLimits(math.pi/4.6,math.pi/3.3)
+		  self.arms.r.joint:setLimitsEnabled(true)
+		end;
+		grounded=false;
+		draw=function(self)
+			  love.graphics.draw(imgs.crabLArm,self.arms.l.b:getX(),self.arms.l.b:getY(),self.arms.l.b:getAngle(),1,1,imgs.crabLArm:getWidth()/2,imgs.crabLArm:getHeight()/2)
+			  love.graphics.draw(imgs.crabRArm,self.arms.r.b:getX(),self.arms.r.b:getY(),self.arms.r.b:getAngle(),1,1,imgs.crabRArm:getWidth()/2,imgs.crabRArm:getHeight()/2)
+			  love.graphics.draw(imgs.crabBod,self.body.b:getX(),self.body.b:getY(),self.body.b:getAngle(),1,1,imgs.crabBod:getWidth()/2,imgs.crabBod:getHeight()/2)
+				if(hitboxes)then
+					love.graphics.polygon("line",self.arms.l.b:getWorldPoints(self.arms.l.s:getPoints()))
+					love.graphics.polygon("line",self.arms.r.b:getWorldPoints(self.arms.r.s:getPoints()))
+					love.graphics.polygon("line",self.body.b:getWorldPoints(self.body.s:getPoints()))
+				end
+		end;
+	}
+
+	crab=Crab(400,200)
+	crab2=Crab(400,0)
+
+
 
   ground={}
   ground.b=love.physics.newBody(world,0,600,"static")
@@ -88,12 +112,8 @@ function love.update(dt)
 end
 
 function love.draw()
-  --love.graphics.polygon("line",crab.arms.l.b:getWorldPoints(crab.arms.l.s:getPoints()))
-  love.graphics.draw(imgs.crabLArm,crab.arms.l.b:getX(),crab.arms.l.b:getY(),crab.arms.l.b:getAngle(),1,1,imgs.crabLArm:getWidth()/2,imgs.crabLArm:getHeight()/2)
-  --love.graphics.polygon("line",crab.arms.r.b:getWorldPoints(crab.arms.r.s:getPoints()))
-  love.graphics.draw(imgs.crabRArm,crab.arms.r.b:getX(),crab.arms.r.b:getY(),crab.arms.r.b:getAngle(),1,1,imgs.crabRArm:getWidth()/2,imgs.crabRArm:getHeight()/2)
-  --love.graphics.polygon("line",crab.body.b:getWorldPoints(crab.body.s:getPoints()))
-  love.graphics.draw(imgs.crabBod,crab.body.b:getX()-100/2,crab.body.b:getY()-50/2,crab.body.b:getAngle())
+	crab:draw()
+	crab2:draw()
   love.graphics.polygon("line",ground.b:getWorldPoints(ground.s:getPoints()))
   love.graphics.print(text,10,10)
 end
@@ -103,6 +123,10 @@ function str(st)
   return string.format("%s",st)
 end
 
+
+
+
+--collision functions
 function collide(a,b,obj1,obj2)
   return ((a:getUserData()==obj1 and b:getUserData()==obj2)or(a:getUserData()==obj2 and b:getUserData()==obj1))
 end
