@@ -15,11 +15,13 @@ function love.load()
 
   imgs={}
   imgs.crabBod=love.graphics.newImage("img/crabBod.png")
+  imgs.crabBodBack=love.graphics.newImage("img/crabBodBack.png")
   imgs.crabRClaw=love.graphics.newImage("img/crabClaw.png")
   imgs.crabRClawC=love.graphics.newImage("img/crabClawC.png")
   imgs.crabLClaw=love.graphics.newImage("img/crabClaw2.png")
   imgs.crabLClawC=love.graphics.newImage("img/crabClaw2C.png")
   imgs.crabEye=love.graphics.newImage("img/crabEye.png")
+  imgs.crabEyeTop=love.graphics.newImage("img/crabEyeTop.png")
 	love.physics.setMeter(64)
 	world=love.physics.newWorld(0,9.8*64,true)
 	world:setCallbacks(beginContact, endContact, preSolve, postSolve)
@@ -148,17 +150,22 @@ function love.load()
 
 			self.color={}
 			self.color.primary={}
-			self.color.primary[1]=255
-			self.color.primary[2]=127
-			self.color.primary[3]=39
+			--self.color.primary[1]=255
+			--self.color.primary[2]=127
+			--self.color.primary[3]=39
+			self.color.primary[1]=102
+			self.color.primary[2]=205
+			self.color.primary[3]=170
+			self.color.secondary={}
+			self.color.secondary[1]=240
+			self.color.secondary[2]=240
+			self.color.secondary[3]=230
 			self.grounded=false;
 			self.grab=false;
 			self.grabjoint=nil;
 
 		end;
 		draw=function(self)
-				--love.graphics.setColor(self.color.primary[1], self.color.primary[2], self.color.primary[3], 255)
-				love.graphics.setColor(255,255,255,255)
 
 				love.graphics.setColor(self.color.primary[1], self.color.primary[2], self.color.primary[3], 255)
 				love.graphics.setLineWidth(5)
@@ -176,13 +183,19 @@ function love.load()
 				eyeStalkR=love.math.newBezierCurve(eyeStalkRPoints)
 				love.graphics.line(eyeStalkR:render())
 
-				love.graphics.setColor(255,255,255,255)
+				love.graphics.setColor(self.color.secondary[1], self.color.secondary[2], self.color.secondary[3], 255)
+				love.graphics.draw(imgs.crabBodBack,self.body.b:getX(),self.body.b:getY(),self.body.b:getAngle(),1,1,imgs.crabBodBack:getWidth()/2,imgs.crabBodBack:getHeight()/2)
+
+				love.graphics.setColor(self.color.primary[1], self.color.primary[2], self.color.primary[3], 255)
 				love.graphics.draw(imgs.crabBod,self.body.b:getX(),self.body.b:getY(),self.body.b:getAngle(),1,1,imgs.crabBod:getWidth()/2,imgs.crabBod:getHeight()/2)
 
+				love.graphics.setColor(255,255,255,255)
 			  love.graphics.draw(imgs.crabEye,self.eyes.l.ball.b:getX(),self.eyes.l.ball.b:getY(),self.eyes.l.ball.b:getAngle(),1,1,imgs.crabEye:getWidth()/2,imgs.crabEye:getHeight()/2)
+				love.graphics.draw(imgs.crabEye,self.eyes.r.ball.b:getX(),self.eyes.r.ball.b:getY(),self.eyes.r.ball.b:getAngle(),1,1,imgs.crabEye:getWidth()/2,imgs.crabEye:getHeight()/2)
 
-
-			  love.graphics.draw(imgs.crabEye,self.eyes.r.ball.b:getX(),self.eyes.r.ball.b:getY(),self.eyes.r.ball.b:getAngle(),1,1,imgs.crabEye:getWidth()/2,imgs.crabEye:getHeight()/2)
+				love.graphics.setColor(self.color.primary[1], self.color.primary[2], self.color.primary[3], 255)
+				love.graphics.draw(imgs.crabEyeTop,self.eyes.l.ball.b:getX(),self.eyes.l.ball.b:getY(),self.eyes.l.ball.b:getAngle(),1,1,imgs.crabEyeTop:getWidth()/2,imgs.crabEyeTop:getHeight()/2)
+				love.graphics.draw(imgs.crabEyeTop,self.eyes.r.ball.b:getX(),self.eyes.r.ball.b:getY(),self.eyes.r.ball.b:getAngle(),1,1,imgs.crabEyeTop:getWidth()/2,imgs.crabEyeTop:getHeight()/2)
 				if(crab.grab) then
 					love.graphics.draw(imgs.crabLClawC,self.claws.l.b:getX(),self.claws.l.b:getY(),self.claws.l.b:getAngle(),1,1,imgs.crabLClawC:getWidth()/2,imgs.crabLClawC:getHeight()/2)
 				else
