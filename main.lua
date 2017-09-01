@@ -22,12 +22,43 @@ function love.load()
   imgs.crabLClawC=love.graphics.newImage("img/crabClaw2C.png")
   imgs.crabEye=love.graphics.newImage("img/crabEye.png")
   imgs.crabEyeTop=love.graphics.newImage("img/crabEyeTop.png")
+
+
+  imgs.knife=love.graphics.newImage("img/knife.png")
 	love.physics.setMeter(64)
 	world=love.physics.newWorld(0,9.8*64,true)
 	world:setCallbacks(beginContact, endContact, preSolve, postSolve)
   text=""
 	persisting = 0
 	hitboxes=true
+
+	objects={}
+	ObjectRect=Class{
+		init=function(self,x,y,mass,restitution,w,h,img,userData,pickUp)
+			self.b=love.physics.newBody(world,x,y,"dynamic")
+		  self.b:setMass(mass)
+			self.s=love.physics.newRectangleShape(w, h)
+		  self.f=love.physics.newFixture(self.b,self.s)
+		  self.f:setRestitution(restitution)
+		  self.f:setUserData(userData)
+		  self.f:setGroupIndex(5)
+			self.img=img
+			self.pickUp=pickUp
+
+		end;
+		update=function(self,dt)
+
+		end;
+		draw=function(self)
+			love.graphics.draw(self.img,self.b:getX(),self.b:getY(),self.b:getAngle(),1,1,self.img:getWidth()/2,self.img:getHeight()/2)
+		end;
+		drawHitBox=function(self)
+			love.graphics.polygon("line",self.b:getWorldPoints(self.s:getPoints()))
+		end;
+	}
+	function newObjectRect(x,y,mass,restitution,w,h,img,userData,pickUp)
+		objects[#objects+1]=ObjectRect(x,y,mass,restitution,w,h,img,userData,pickUp)
+	end;
 
 
 	Crab=Class{
@@ -56,7 +87,7 @@ function love.load()
 
 			self.claws.l.rope=love.physics.newRopeJoint(self.body.b, self.claws.l.b, x+50, y-20, x+120, y-20, 40, true)
 			self.claws.l.mouse=love.physics.newMouseJoint(self.claws.l.b, x+150,y-20)
-			self.claws.l.mouse:setMaxForce(1200)
+			self.claws.l.mouse:setMaxForce(1500)
 			self.claws.l.mouse:setDampingRatio(5)
 
 			self.claws.r={}
@@ -260,10 +291,21 @@ function love.load()
   ground.f:setRestitution(0.4)
   ground.f:setUserData("ground")
   ground.f:setFilterData(1,1,1)
+
+	newObjectRect(600,100,2,0.2,20,80,imgs.knife,"knife",true)
 end
 
 function love.update(dt)
 	crab:update(dt)
+	if(crab.grabjointQ~=nil)then
+		crab.grabjointQ()
+		crab.grabjointQ=nil
+	end
+	for n,obj in ipairs(objects) do
+		if(obj)then
+			obj:update(dt)
+		end
+	end;
   world:update(dt)
   x,y=crab.body.b:getLinearVelocity()
 		if love.keyboard.isDown("d") then
@@ -286,7 +328,12 @@ function love.update(dt)
 		end
 end
 function love.mousepressed(x, y, button, isTouch)
-	if(crab.grab)then crab.grab=false
+	if(crab.grab)then
+		if(crab.grabjoint~=nil)then
+			crab.grabjoint:destroy()
+			crab.grabjoint=nil
+		end
+		crab.grab=false
 	else crab.grab=true end
 end
 function love.keyreleased(key)
@@ -297,14 +344,33 @@ function love.keyreleased(key)
 		else
 			hitboxes=true
 		end
+	elseif key=="r" then
+		love.load()
 	end
 end
 
 function love.draw()
 	crab:draw()
 	--crab2:draw()
+	love.graphics.setColor(255, 255, 255, 255)
+	love.graphics.setLineWidth(1)
+	for n,obj in ipairs(objects) do
+		if(obj)then
+			obj:draw()
+		end
+	end;
+	if(hitboxes) then
+		for n,obj in ipairs(objects) do
+			if(obj)then
+				obj:drawHitBox()
+			end
+		end;
+	end;
   love.graphics.polygon("line",ground.b:getWorldPoints(ground.s:getPoints()))
-  love.graphics.print(text,10,10)
+	if(hitboxes)then
+  	love.graphics.print(text,10,10)
+  	love.graphics.print("DEBUG MODE",window.w/2+50,0)
+	end
 end
 
 
@@ -313,16 +379,24 @@ function str(st)
 end
 
 
-
-
 --collision functions
 function collide(a,b,obj1,obj2)
   return ((a:getUserData()==obj1 and b:getUserData()==obj2)or(a:getUserData()==obj2 and b:getUserData()==obj1))
 end
+function collideGroup(a,b,obj1,obj2)
+  return ((a:getGroupIndex()==obj1 and b:getGroupIndex()==obj2)or(a:getGroupIndex()==obj2 and b:getGroupIndex()==obj1))
+end
 function beginContact(a, b, coll)
   text=string.format("%s touching %s",a:getUserData(),b:getUserData())
+	--text=string.format("%s",Inspect(getmetatable(coll:getFixtures():getBody())))
   if(collide(a,b,"crab","ground"))then
     crab.grounded=true
+	elseif(collideGroup(a,b,-1,5)) then
+		if(crab.grabjoint==nil and crab.grab and (a:getUserData()=="crab.claws.l" or b:getUserData()=="crab.claws.l")) then
+			if(a:getUserData()=="crab.claws.l")then objectCentre=b
+			else objectCentre=a end;
+			crab.grabjointQ=function() crab.grabjoint=love.physics.newWeldJoint(a:getBody(), b:getBody(), objectCentre:getBody():getX(), objectCentre:getBody():getY(), false)end
+		end
   end
 end
 
